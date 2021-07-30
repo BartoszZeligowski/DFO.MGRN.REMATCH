@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31321.278
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DFO.MGRN.REMATCH", "DFO.MGRN.REMATCH\DFO.MGRN.REMATCH.csproj", "{014403F4-A6B4-4B29-A62A-F806AC089ED7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{014403F4-A6B4-4B29-A62A-F806AC089ED7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{014403F4-A6B4-4B29-A62A-F806AC089ED7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{014403F4-A6B4-4B29-A62A-F806AC089ED7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{014403F4-A6B4-4B29-A62A-F806AC089ED7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CD109911-6116-4F99-B076-F83E428CE870}
+	EndGlobalSection
+EndGlobal
