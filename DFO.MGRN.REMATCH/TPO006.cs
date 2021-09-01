@@ -54,21 +54,29 @@ namespace DFO.MGRN.REMATCH
 
         private void _form_OnOpenedRow(object sender, OpenRowEventArgs e)
         {
-            _form.GetSection("GLAnalysis").IsReadOnly = false;
+           // if (e.Row.Table.TableName == "apovitransdetail")
+            //{
+                foreach (DataRow row in _form.Data.Tables["apovitransdetail"].Rows)
+                {
+                    _form.GetSection("GLAnalysis").IsReadOnly = false;
 
-            _form.GetField("GLAnalysis", "account").SetColumnToReadOnly(e.Row.Table.Rows.IndexOf(e.Row), true);
-            _form.GetField("GLAnalysis", "dim_1").SetColumnToReadOnly(e.Row.Table.Rows.IndexOf(e.Row), true);
-            _form.GetField("GLAnalysis", "dim_2").SetColumnToReadOnly(e.Row.Table.Rows.IndexOf(e.Row), true);
-            _form.GetField("GLAnalysis", "dim_3").SetColumnToReadOnly(e.Row.Table.Rows.IndexOf(e.Row), true);
-            _form.GetField("GLAnalysis", "dim_4").SetColumnToReadOnly(e.Row.Table.Rows.IndexOf(e.Row), true);
-            _form.GetField("GLAnalysis", "dim_5").SetColumnToReadOnly(e.Row.Table.Rows.IndexOf(e.Row), true);
-            _form.GetField("GLAnalysis", "dim_6").SetColumnToReadOnly(e.Row.Table.Rows.IndexOf(e.Row), true);
-            _form.GetField("GLAnalysis", "dim_7").SetColumnToReadOnly(e.Row.Table.Rows.IndexOf(e.Row), true);
-            _form.GetField("GLAnalysis", "tax_system").SetColumnToReadOnly(e.Row.Table.Rows.IndexOf(e.Row), true);
-            _form.GetField("GLAnalysis", "percentage").SetColumnToReadOnly(e.Row.Table.Rows.IndexOf(e.Row), true);
-            _form.GetField("GLAnalysis", "amount").IsHidden = true;
+                    _form.GetField("GLAnalysis", "account").SetColumnToReadOnly(row.Table.Rows.IndexOf(row), true);
+                    _form.GetField("GLAnalysis", "act_req_asset_extra_asset_status").SetColumnToReadOnly(row.Table.Rows.IndexOf(row), true);
+                    _form.GetField("GLAnalysis", "dim_1").SetColumnToReadOnly(row.Table.Rows.IndexOf(row), true);
+                    _form.GetField("GLAnalysis", "dim_2").SetColumnToReadOnly(row.Table.Rows.IndexOf(row), true);
+                    _form.GetField("GLAnalysis", "dim_3").SetColumnToReadOnly(row.Table.Rows.IndexOf(row), true);
+                    _form.GetField("GLAnalysis", "dim_4").SetColumnToReadOnly(row.Table.Rows.IndexOf(row), true);
+                    _form.GetField("GLAnalysis", "dim_5").SetColumnToReadOnly(row.Table.Rows.IndexOf(row), true);
+                    _form.GetField("GLAnalysis", "dim_6").SetColumnToReadOnly(row.Table.Rows.IndexOf(row), true);
+                    _form.GetField("GLAnalysis", "dim_7").SetColumnToReadOnly(row.Table.Rows.IndexOf(row), true);
+                    _form.GetField("GLAnalysis", "tax_system").SetColumnToReadOnly(row.Table.Rows.IndexOf(row), true);
+                    _form.GetField("GLAnalysis", "tax_code").SetColumnToReadOnly(row.Table.Rows.IndexOf(row), false);
+                    _form.GetField("GLAnalysis", "percentage").SetColumnToReadOnly(row.Table.Rows.IndexOf(row), true);
+                    _form.GetField("GLAnalysis", "amount").IsHidden = true;
+                }
 
-            _form.Data.Tables["algdelivery"].AcceptChanges();
+                //_form.Data.Tables["algdelivery"].AcceptChanges(); 
+            //}
         }
 
         private void _form_OnValidatingField(object sender, ValidateFieldEventArgs e)
@@ -117,13 +125,22 @@ namespace DFO.MGRN.REMATCH
             {
                 if (e.FieldName == "tax_code")
                 {
-
+                    
                     string taxCode = e.Row["tax_code"].ToString();
                     string orderId = e.Row["order_id"].ToString();
                     string lineNo = e.Row["line_no"].ToString();
+                    string userId = CurrentContext.Session.UserId.ToString();
+                    
 
                     IStatement sql = CurrentContext.Database.CreateStatement();
-                    sql.Assign($" Update apodetail set tax_code = '{taxCode}' where order_id = {orderId} and line_no = {lineNo} and client = @client ");
+                    sql.Assign(" Update a ");
+                    sql.Append($" SET a.tax_code = '{taxCode}', a.tax_percent = b.vat_pct ");
+                    sql.Append(" , a.tax_amount = ROUND(a.amount * (b.vat_pct/100),2) ");
+                    sql.Append(" , a.tax_cur_amt = ROUND(a.cur_amount * (b.vat_pct/100),2) ");
+                    sql.Append($" , a.last_update = getdate() , a.user_id ='{userId}' ");
+                    sql.Append(" FROM apodetail a, agltaxcode b ");
+                    sql.Append($" WHERE a.client = b.client and b.tax_code = '{taxCode}' and cast(getdate() as date) between b.date_from and b.date_to ");
+                    sql.Append($" AND a.order_id = {orderId} and a.line_no = {lineNo} and a.client = @client ");
                     sql["client"] = _form.Client;
 
                     CurrentContext.Database.Execute(sql);

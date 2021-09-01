@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\UBW700\Web\bin\</OutputPath>
+    <OutputPath>E:\UBW700\Web\bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ACT">
-      <HintPath>..\..\TPO010.Details\TPO010.Details\bin\Debug\ACT.dll</HintPath>
+      <HintPath>E:\_Install\75 Kundetilpasninger\Bartosz Tilpassning\TPO010.Details\TPO010.Details\bin\Debug\ACT.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
