@@ -178,7 +178,7 @@ namespace DFO.MGRN.REMATCH
             DataTable dt = new DataTable();
 
             IStatement sql = CurrentContext.Database.CreateStatement();
-            sql.Assign("    SELECT sum (amount) as amount from acrtrans  ");
+            sql.Assign("    SELECT sum (reg_amount) as amount from acrtrans  ");
             sql.Append($"   WHERE client = @client and voucher_no = @voucherNo and trans_type = 'GL' ");
             sql["client"] = _form.Client;
             sql["voucherNo"] = _form.Parameters["voucher_no"].ToString();
@@ -196,9 +196,9 @@ namespace DFO.MGRN.REMATCH
                 //grnQuantity += double.Parse(row["received_val"].ToString());
 
             }
-            double balance = double.Parse(dt.Rows[0]["amount"].ToString());
+            double balance = Math.Round(double.Parse(dt.Rows[0]["amount"].ToString()),2);
            
-            double grnTot = grnAmount;
+            double grnTot = Math.Round(grnAmount,2);
 
             double diff = Math.Abs(balance - grnTot);
 
