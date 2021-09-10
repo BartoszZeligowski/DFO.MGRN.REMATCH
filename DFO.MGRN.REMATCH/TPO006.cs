@@ -86,9 +86,9 @@ namespace DFO.MGRN.REMATCH
 
                                 IStatement sql1 = CurrentContext.Database.CreateStatement();
                                 sql1.Assign(" INSERT INTO udt_iin_apochangelog ");
-                                sql1.Append(" (client ,voucher_no, order_id,line_no,type,last_update,user_id) ");
+                                sql1.Append(" (client ,voucher_no, order_id,line_no,type,last_update,user_id,old_val,new_val) ");
                                 sql1.Append(" Values ");
-                                sql1.Append($" (@client, {voucherNo}, {orderId}, {lineNo}, 'MVA', getdate(), '{userId}' ) ");
+                                sql1.Append($" (@client, {voucherNo}, {orderId}, {lineNo}, 'MVA', getdate(), '{userId}', '{oldTaxCode}','{taxCode}' ) ");
                                 sql1["client"] = _form.Client;
 
                                 CurrentContext.Database.Execute(sql1);
