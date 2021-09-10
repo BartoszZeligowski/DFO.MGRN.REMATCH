@@ -27,28 +27,81 @@ namespace DFO.MGRN.REMATCH
             _form.OnOpenedRow += _form_OnOpenedRow;
             _form.OnSaved += _form_OnSaved;
             _form.OnValidatingField += _form_OnValidatingField;
+            //_form.OnDataSchemaValidate += _form_OnDataSchemaValidate;
            
         }
 
+        //private void _form_OnDataSchemaValidate(object sender, DataSchemaValidateEventArgs e)
+        //{
+        //    ISection accountingSec = _form.GetSection("GLAnalysis");
+
+        //    DataTable accountingSecTable = _form.Data.Tables[accountingSec.TableName];
+
+        //    accountingSecTable.Columns.Add("ChangeTax", typeof(string));
+        //}
+
+       
+
         private void _form_OnSaved(object sender, SaveEventArgs e)
         {
-
-            if (_form.Parameters.Contains("voucher_no"))
+            if (!e.Cancel)
             {
-                string orderId = _form.Parameters["order_id"].ToString();
-                string voucherNo = _form.Parameters["voucher_no"].ToString();
 
-                bool hasDiscrAccount = ChkDiscrAccount(voucherNo);
-                if (hasDiscrAccount)
+                if (_form.Parameters.Contains("voucher_no"))
                 {
-                   // DeleteFromAcrtrans(orderId, voucherNo);
-                   // UpdateAlgdelivery(voucherNo);
-                   // DeleteApoarrord(voucherNo);
-                   // InsertApoinvoiceImport(orderId, voucherNo);
-                   // _form.Close();
-                    
+                    DataTable dtDelivery = _form.Data.Tables["algdelivery"];
+                    DataTable dt = _form.Data.Tables["apovitransdetail"];
 
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        string taxCode = row["tax_code"].ToString();
+                        string orderId = row["order_id"].ToString();
+                        string lineNo = row["line_no"].ToString();
+                        string userId = CurrentContext.Session.UserId.ToString();
+                        string voucherNo = _form.Parameters["voucher_no"].ToString();
+
+
+
+                        foreach (DataRow rowdelivery in dtDelivery.Rows)
+                        {
+                            string oldTaxCode = rowdelivery["tax_code"].ToString();
+                            string delivLineNo = rowdelivery["line_no"].ToString();
+
+
+                            if (taxCode != oldTaxCode && lineNo == delivLineNo)
+                            {
+
+                                IStatement sql = CurrentContext.Database.CreateStatement();
+                                sql.Assign(" Update a ");
+                                sql.Append($" SET a.tax_code = '{taxCode}', a.tax_percent = b.vat_pct ");
+                                sql.Append(" , a.tax_amount = ROUND(a.amount * (b.vat_pct/100),2) ");
+                                sql.Append(" , a.tax_cur_amt = ROUND(a.cur_amount * (b.vat_pct/100),2) ");
+                                sql.Append($" , a.last_update = getdate() , a.user_id ='{userId}' ");
+                                sql.Append(" FROM apodetail a, agltaxcode b ");
+                                sql.Append($" WHERE a.client = b.client and b.tax_code = '{taxCode}' and cast(getdate() as date) between b.date_from and b.date_to ");
+                                sql.Append($" AND a.order_id = {orderId} and a.line_no = {lineNo} and a.client = @client ");
+                                sql["client"] = _form.Client;
+
+                                CurrentContext.Database.Execute(sql);
+
+                                IStatement sql1 = CurrentContext.Database.CreateStatement();
+                                sql1.Assign(" INSERT INTO udt_iin_apochangelog ");
+                                sql1.Append(" (client ,voucher_no, order_id,line_no,type,last_update,user_id) ");
+                                sql1.Append(" Values ");
+                                sql1.Append($" (@client, {voucherNo}, {orderId}, {lineNo}, 'MVA', getdate(), '{userId}' ) ");
+                                sql1["client"] = _form.Client;
+
+                                CurrentContext.Database.Execute(sql1);
+
+
+                                CurrentContext.Message.Display(MessageDisplayType.Confirmation, "Mva kode oppdatert på innkjøpsordren!");
+                            }
+                        }
+
+                    }
                 }
+
+                CurrentContext.Message.Display(MessageDisplayType.Confirmation, "Mva kode oppdater på innkjøpsordren!");
             }
         }
 
@@ -94,69 +147,6 @@ namespace DFO.MGRN.REMATCH
            // artDescrDecoration.ReadOnly = true;
             cellColor.Apply();
 
-            //if (e.TableName == "algdelivery")
-            //{
-            //    if (e.FieldName == "received_val")
-            //    {
-            //        e.Row["arr_val"] = e.Row["received_val"].ToString();
-
-            //        foreach (DataRow row in _form.Data.Tables["apodetail"].Rows)
-            //        {
-            //            if (e.Row["line_no"].ToString() == row["line_no"].ToString())
-            //            {
-            //                row["arr_val"] = e.Row["arr_val"].ToString();
-            //            }
-            //        }
-            //    }
-            //    if (e.FieldName == "rev_price")
-            //    {
-            //        e.Row["rev_price"] = e.Row["rev_price"].ToString();
-            //        foreach (DataRow row in _form.Data.Tables["apodetail"].Rows)
-            //        {
-            //            if (e.Row["line_no"].ToString() == row["line_no"].ToString())
-            //            {
-            //                row["arr_amount"] = (double.Parse(e.Row["arr_val"].ToString()) * double.Parse(e.Row["rev_price"].ToString()));
-            //                //(double.Parse(row["rev_price"].ToString()) * double.Parse(row["received_val"].ToString()))
-            //            }
-            //        }
-            //    }
-            //}
-            if (e.TableName == "apovitransdetail")
-            {
-                if (e.FieldName == "tax_code")
-                {
-                    
-                    string taxCode = e.Row["tax_code"].ToString();
-                    string orderId = e.Row["order_id"].ToString();
-                    string lineNo = e.Row["line_no"].ToString();
-                    string userId = CurrentContext.Session.UserId.ToString();
-                    
-
-                    IStatement sql = CurrentContext.Database.CreateStatement();
-                    sql.Assign(" Update a ");
-                    sql.Append($" SET a.tax_code = '{taxCode}', a.tax_percent = b.vat_pct ");
-                    sql.Append(" , a.tax_amount = ROUND(a.amount * (b.vat_pct/100),2) ");
-                    sql.Append(" , a.tax_cur_amt = ROUND(a.cur_amount * (b.vat_pct/100),2) ");
-                    sql.Append($" , a.last_update = getdate() , a.user_id ='{userId}' ");
-                    sql.Append(" FROM apodetail a, agltaxcode b ");
-                    sql.Append($" WHERE a.client = b.client and b.tax_code = '{taxCode}' and cast(getdate() as date) between b.date_from and b.date_to ");
-                    sql.Append($" AND a.order_id = {orderId} and a.line_no = {lineNo} and a.client = @client ");
-                    sql["client"] = _form.Client;
-
-                    CurrentContext.Database.Execute(sql);
-
-                    CurrentContext.Message.Display(MessageDisplayType.Confirmation, "Mva kode oppdater på innkjøpsordren!");
-
-                   // e.Row["tax_code"] = e.Row["tax_code"].ToString();
-                    foreach (DataRow row in _form.Data.Tables["algdelivery"].Rows)
-                    {
-                        if (e.Row["line_no"].ToString() == row["line_no"].ToString())
-                        {
-                            row["tax_code"] = e.Row["tax_code"].ToString();
-                        }
-                    }
-                }
-            }
 
         }
 
@@ -169,10 +159,10 @@ namespace DFO.MGRN.REMATCH
                     e.Cancel = true;
                     CurrentContext.Message.Display(MessageDisplayType.Error, "Varemotakk balanserer ikke med fakturaen");
 
-                } 
+                }
+
             }
         }
-
         private bool GetAcrtransValue ()
         {
             DataTable dt = new DataTable();
